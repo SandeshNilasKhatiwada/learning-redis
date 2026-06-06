@@ -3,7 +3,11 @@ import { createClient } from "redis";
 import cors from "cors";
 
 const app = express();
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5174", // Replace with your frontend URL
+  }),
+);
 app.use(express.json());
 
 async function connectRedis() {
@@ -43,10 +47,11 @@ app.post("/api/score", async (req, res) => {
 // 2. get Top 10 LeaderBoard (Uses ZREVRANGE with WITHSCORES via zRange)
 app.get("/api/leaderboard", async (req, res) => {
   try {
-    const topPlayers = await redisClient.zRange(LEADERBOARD_KEY, 0, 9, {
+    const playersWithScores = await redisClient.zRangeWithScores(LEADERBOARD_KEY, 0, 9, {
       REV: true,
     });
-    res.json(topPlayers);
+    console.log("Fetched leaderboard from Redis:", playersWithScores);
+    res.json(playersWithScores);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
